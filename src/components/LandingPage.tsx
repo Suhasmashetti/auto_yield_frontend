@@ -11,7 +11,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
       {/* Navigation */}
-      <nav className="relative z-10 flex justify-between items-center p-6 border-b border-gray-800">
+      <nav className="relative z-10 flex justify-between items-center p-6 border-b border-black">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
             <span className="text-black font-bold text-sm">AY</span>
@@ -31,7 +31,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </nav>
 
       {/* Hero Section */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-[80vh] px-6">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-[80vh] px-6  bg-cover bg-center">
         <div className="text-center max-w-6xl mx-auto">
           {/* Main Heading */}
           <div className="animate-fade-in-up">
@@ -40,7 +40,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               <br />
               <span className="text-white">USDC</span>
               <br />
-              <span className="text-white border-2 border-white px-4 py-2 inline-block">MEETS</span>
+              <span className="text-white border-2 border-white px-4 py-1 inline-block">MEETS</span>
               <br />
               <span className="text-white">YIELD</span>
             </h1>
