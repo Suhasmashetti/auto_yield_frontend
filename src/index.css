@@ -177,8 +177,7 @@
 /* Override Wallet Adapter Button styles */
 .wallet-adapter-button {
   background-color: #fff !important;   
-  color: #000 !important;             
-  border-radius: 0.5rem !important;   
+  color: #000 !important;                
 }
 
 .wallet-adapter-button:hover {
