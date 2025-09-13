@@ -19,10 +19,46 @@ export function useVaultOperations() {
   const [error, setError] = useState("");
   const [isVaultOwner, setIsVaultOwner] = useState(false);
   const [lastTransactionSignature, setLastTransactionSignature] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true); // Add initialization state
   
   // Prevent multiple simultaneous API calls
   const isLoadingRef = useRef(false);
   const hasInitialized = useRef(false);
+
+  // Load user balances (reusable function)
+  const loadUserBalances = useCallback(async (currentVaultInfo?: VaultInfo | null) => {
+    if (!publicKey || !connection) return;
+    
+    try {
+      // Get user USDC balance
+      const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
+      try {
+        const usdcAccount = await getAccount(connection, userUsdcAta);
+        const usdcBalance = Number(usdcAccount.amount) / 1e6;
+        setUserBalances(prev => ({ ...prev, usdcBalance }));
+      } catch (usdcError: any) {
+        setUserBalances(prev => ({ ...prev, usdcBalance: 0 }));
+      }
+
+      // Get user yUSDC balance if vault exists
+      if (currentVaultInfo) {
+        const userYusdcAta = getAssociatedTokenAddressSync(currentVaultInfo.yusdcMint, publicKey);
+        try {
+          const yusdcAccount = await getAccount(connection, userYusdcAta);
+          const yusdcBalance = Number(yusdcAccount.amount) / 1e6;
+          setUserBalances(prev => ({ ...prev, yusdcBalance }));
+        } catch (yusdcError: any) {
+          setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
+        }
+      } else {
+        setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error loading user balances:", err);
+      }
+    }
+  }, []); // Empty dependency array since we use parameters instead
 
   // Initialize all data (only called once or manually)
   const initializeData = useCallback(async () => {
@@ -65,75 +101,18 @@ export function useVaultOperations() {
         setVaultInfo(null);
       }
       
-      // Load user balances
-      if (publicKey && connection) {
-        const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
-        try {
-          const usdcAccount = await getAccount(connection, userUsdcAta);
-          const usdcBalance = Number(usdcAccount.amount) / 1e6;
-          setUserBalances(prev => ({ ...prev, usdcBalance }));
-        } catch (usdcError: any) {
-          setUserBalances(prev => ({ ...prev, usdcBalance: 0 }));
-        }
-
-        // Get yUSDC balance if vault exists
-        if (currentVaultInfo) {
-          const userYusdcAta = getAssociatedTokenAddressSync(currentVaultInfo.yusdcMint, publicKey);
-          try {
-            const yusdcAccount = await getAccount(connection, userYusdcAta);
-            const yusdcBalance = Number(yusdcAccount.amount) / 1e6;
-            setUserBalances(prev => ({ ...prev, yusdcBalance }));
-          } catch (yusdcError: any) {
-            setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
-          }
-        } else {
-          setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
-        }
-      }
+      // Load user balances using the reusable function
+      await loadUserBalances(currentVaultInfo);
+      
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.log("Error during initialization:", err);
       }
     } finally {
       isLoadingRef.current = false;
+      setIsInitializing(false); // Mark initialization as complete
     }
-  }, [connected, publicKey, program, connection]);
-
-    // Load user balances
-  const loadUserBalances = useCallback(async (currentVaultInfo?: VaultInfo | null) => {
-    if (!publicKey || !connection) return;
-    
-    try {
-      // Get user USDC balance
-      const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
-      try {
-        const usdcAccount = await getAccount(connection, userUsdcAta);
-        const usdcBalance = Number(usdcAccount.amount) / 1e6;
-        setUserBalances(prev => ({ ...prev, usdcBalance }));
-      } catch (usdcError: any) {
-        setUserBalances(prev => ({ ...prev, usdcBalance: 0 }));
-      }
-
-      // Get user yUSDC balance if vault exists
-      const vaultToUse = currentVaultInfo !== undefined ? currentVaultInfo : vaultInfo;
-      if (vaultToUse) {
-        const userYusdcAta = getAssociatedTokenAddressSync(vaultToUse.yusdcMint, publicKey);
-        try {
-          const yusdcAccount = await getAccount(connection, userYusdcAta);
-          const yusdcBalance = Number(yusdcAccount.amount) / 1e6;
-          setUserBalances(prev => ({ ...prev, yusdcBalance }));
-        } catch (yusdcError: any) {
-          setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
-        }
-      } else {
-        setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
-      }
-    } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error("Error loading user balances:", err);
-      }
-    }
-  }, [publicKey, connection, vaultInfo]);
+  }, [connected, program, loadUserBalances]);
 
   // Initialize when wallet connects
   useEffect(() => {
@@ -141,6 +120,13 @@ export function useVaultOperations() {
       initializeData();
     }
   }, [connected, initializeData]);
+
+  // Set initial loading state based on connection status
+  useEffect(() => {
+    if (!connected) {
+      setIsInitializing(false); // No need to initialize if wallet not connected
+    }
+  }, [connected]);
 
   // Initialize vault
   const handleInitialize = useCallback(async () => {
@@ -377,9 +363,9 @@ export function useVaultOperations() {
     }
   }, [program, publicKey, vaultInfo, initializeData]);
 
-  // Refresh all data (for manual refresh)
-  const refreshData = useCallback(async () => {
-    await initializeData();
+  // Refresh all data (for manual refresh) - stable reference
+  const refreshData = useCallback(() => {
+    return initializeData();
   }, [initializeData]);
 
   return {
@@ -390,6 +376,7 @@ export function useVaultOperations() {
     error,
     isVaultOwner,
     lastTransactionSignature,
+    isInitializing,
     
     // Actions
     handleInitialize,
