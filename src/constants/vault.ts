@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 // Solana program addresses
 export const USDC_MINT = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"); // DevNet USDC
 export const VAULT_AUTHORITY = new PublicKey("DWpFeAKWzFdTQFxUHzsTDCdXU1ouKoxypfMvLAYSbyT");
-
+export const VAULT_META_DATA_ACCOUNT = new PublicKey("CzRUzCEcmbsHMb67uwgUSNt6a2EQLLea8M2dzV5udYyq");
 // PDA seeds
 export const VAULT_METADATA_SEED = "vault_metadata";
 export const VAULT_USDC_SEED = "vault_usdc";
