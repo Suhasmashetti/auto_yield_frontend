@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { VaultInfo } from "../types/vault";
 import { DEFAULT_EXCHANGE_RATE } from "../constants/vault";
 
@@ -5,14 +6,16 @@ interface VaultInfoCardProps {
   vaultInfo: VaultInfo | null;
   isVaultOwner: boolean;
   loading: boolean;
+  isInitializing?: boolean;
   onInitialize: () => void;
   onFixAuthorities: () => void;
 }
 
-export function VaultInfoCard({
+export const VaultInfoCard = memo(function VaultInfoCard({
   vaultInfo,
   isVaultOwner,
   loading,
+  isInitializing = false,
   onInitialize,
   onFixAuthorities,
 }: VaultInfoCardProps) {
@@ -29,7 +32,7 @@ export function VaultInfoCard({
       </h2>
 
       {vaultInfo ? (
-        <div className="space-y-4 animate-fade-in-up">
+        <div className="space-y-4">
           {/* Stats */}
           <div className="space-y-2 text-sm">
             <InfoRow 
@@ -77,13 +80,14 @@ export function VaultInfoCard({
         <VaultNotInitialized
           isVaultOwner={isVaultOwner}
           loading={loading}
+          isInitializing={isInitializing}
           onInitialize={onInitialize}
           onFixAuthorities={onFixAuthorities}
         />
       )}
     </div>
   );
-}
+});
 
 /* 🔹 Reusable row component */
 function InfoRow({ 
@@ -114,16 +118,32 @@ function InfoRow({
 function VaultNotInitialized({
   isVaultOwner,
   loading,
+  isInitializing = false,
   onInitialize,
   onFixAuthorities,
 }: {
   isVaultOwner: boolean;
   loading: boolean;
+  isInitializing?: boolean;
   onInitialize: () => void;
   onFixAuthorities: () => void;
 }) {
+  // Show loading state during initialization
+  if (isInitializing) {
+    return (
+      <div className="text-center animate-fade-in-up">
+        <div className="mb-4">
+          <div className="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+          </div>
+          <p className="text-gray-400 uppercase tracking-wider">Loading vault information...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="text-center animate-fade-in-up">
+    <div className="text-center">
       <div className="mb-4">
         <div className="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center">
           <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +187,7 @@ function VaultNotInitialized({
           </button>
         </div>
       ) : (
-        <div className="text-center text-sm border border-gray-800 p-4 animate-fade-in-up animation-delay-300">
+        <div className="text-center text-sm border border-gray-800 p-4 ">
           <p className="text-gray-400 mb-2 flex items-center justify-center uppercase tracking-wider">
             <span className="mr-2">⚠</span>
             Only the vault owner can initialize the vault.
