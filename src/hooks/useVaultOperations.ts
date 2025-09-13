@@ -30,17 +30,18 @@ export function useVaultOperations() {
     if (!publicKey || !connection) return;
     
     try {
-      // Get user USDC balance
+      // Get user USDC balance - single API call optimization
       const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
       try {
         const usdcAccount = await getAccount(connection, userUsdcAta);
         const usdcBalance = Number(usdcAccount.amount) / 1e6;
         setUserBalances(prev => ({ ...prev, usdcBalance }));
       } catch (usdcError: any) {
+        // Account doesn't exist or other error - set balance to 0
         setUserBalances(prev => ({ ...prev, usdcBalance: 0 }));
       }
 
-      // Get user yUSDC balance if vault exists
+      // Get user yUSDC balance if vault exists - single API call optimization
       if (currentVaultInfo) {
         const userYusdcAta = getAssociatedTokenAddressSync(currentVaultInfo.yusdcMint, publicKey);
         try {
@@ -48,6 +49,7 @@ export function useVaultOperations() {
           const yusdcBalance = Number(yusdcAccount.amount) / 1e6;
           setUserBalances(prev => ({ ...prev, yusdcBalance }));
         } catch (yusdcError: any) {
+          // Account doesn't exist or other error - set balance to 0
           setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
         }
       } else {
@@ -223,25 +225,28 @@ export function useVaultOperations() {
       const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
       const userYusdcAta = getAssociatedTokenAddressSync(yusdcMint, publicKey);
       
-      // Check user's USDC balance first
+      // Single API call optimization: Check balance first, account existence is implicit
+      let userBalance: number;
       try {
         const userUsdcAccount = await getAccount(connection, userUsdcAta);
-        const userBalance = Number(userUsdcAccount.amount) / 1e6;
-        const depositAmountNumber = parseFloat(amount);
-        
-        if (userBalance < depositAmountNumber) {
-          setError(`Insufficient USDC balance. You have ${userBalance} USDC but trying to deposit ${depositAmountNumber} USDC`);
-          setLoading(false);
-          return;
-        }
+        userBalance = Number(userUsdcAccount.amount) / 1e6;
       } catch (accountError: any) {
+        // Account doesn't exist - provide helpful error message
         if (accountError.message && accountError.message.includes('could not find account')) {
           setError(`You don't have a USDC token account. Please get some devnet USDC first.`);
         } else if (accountError.name === 'TokenAccountNotFoundError') {
           setError(`USDC token account not found. Please get some devnet USDC first.`);
         } else {
-          setError(`Error checking USDC balance: ${accountError.message || accountError.toString()}`);
+          setError(`Error accessing USDC account: ${accountError.message || accountError.toString()}`);
         }
+        setLoading(false);
+        return;
+      }
+      
+      // Check if user has sufficient balance
+      const depositAmountNumber = parseFloat(amount);
+      if (userBalance < depositAmountNumber) {
+        setError(`Insufficient USDC balance. You have ${userBalance.toFixed(6)} USDC but trying to deposit ${depositAmountNumber} USDC`);
         setLoading(false);
         return;
       }

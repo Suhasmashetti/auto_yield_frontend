@@ -30,10 +30,8 @@ export function useProgram(): Program<Idl> | null {
       });
 
       const program = new Program(idl as Idl, provider);
-      console.log("Program initialized successfully:", program.programId.toBase58());
       return program;
     } catch (error) {
-      console.error("Error initializing program:", error);
       return null;
     }
   }, [wallet]);

@@ -23,27 +23,33 @@ export function Header() {
       </div>
 
       {/* Middle section */}
-      <div className="hidden md:flex flex-col items-center text-xs text-gray-500">
-        <p className="uppercase tracking-wider">
-          Vault Authority:{" "}
-          <code className="bg-black border border-gray-700 px-2 py-0.5 text-gray-300 font-mono">
+      <div className="hidden md:flex flex-col items-start text-sm text-gray-400 space-y-3">
+        {/* Vault Authority */}
+        <div className="flex items-center space-x-2">
+            <span className="uppercase tracking-wide font-medium">Vault Authority:</span>
+            <code className="bg-gray-900 border border-gray-700 px-3 py-1 rounded-md text-gray-200 font-mono">
             {VAULT_AUTHORITY.toBase58().slice(0, 6)}...
             {VAULT_AUTHORITY.toBase58().slice(-6)}
-          </code>
-        </p>
+            </code>
+        </div>
+
+        {/* Connected Wallet */}
         {connected && publicKey && (
-          <p className="uppercase tracking-wider">
-            Your Wallet:{" "}
-            <code className="bg-black border border-gray-700 px-2 py-0.5 text-gray-300 font-mono">
-              {publicKey.toBase58().slice(0, 6)}...
-              {publicKey.toBase58().slice(-6)}
+            <div className="flex items-center space-x-2">
+            <span className="uppercase tracking-wide font-medium">Your Wallet:</span>
+            <code className="bg-gray-900 border border-gray-700 px-3 py-1 rounded-md text-gray-200 font-mono">
+                {publicKey.toBase58().slice(0, 6)}...
+                {publicKey.toBase58().slice(-6)}
             </code>
             {isVaultOwner && (
-              <span className="ml-2 text-white font-medium uppercase tracking-wider">OWNER</span>
+                <span className="ml-2 text-green-400 font-semibold uppercase tracking-wide">
+                OWNER
+                </span>
             )}
-          </p>
+            </div>
         )}
-      </div>
+        </div>
+
 
       {/* Right section */}
       <div>

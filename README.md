@@ -2,6 +2,21 @@
 
 This is a basic frontend for testing the Auto Yield vault smart contract on Solana Devnet.
 
+## Folder Structure
+
+src/components/
+├── dashboardcomponents/
+│   ├── ActionPanel.tsx          # Deposit/withdraw actions
+│   ├── DevelopmentUtils.tsx     # Dev tools & debugging utilities
+│   ├── ErrorDisplay.tsx         # Error handling component
+│   ├── Header.tsx              # Dashboard navigation header
+│   ├── UserBalancesCard.tsx    # User's USDC/yUSDC balances
+│   ├── VaultInfoCard.tsx       # Vault statistics & info
+│   └── index.ts                # Clean exports
+├── landingpagecomponents/       # Already structured
+├── Dashboard.tsx                # Main dashboard orchestrator
+└── index.ts                     # Updated exports
+
 ## Features
 
 - **Wallet Connection**: Connect using Phantom, Solflare, or other Solana wallets

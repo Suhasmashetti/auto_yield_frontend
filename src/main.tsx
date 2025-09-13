@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 
@@ -14,11 +15,13 @@ window.process = process;
 const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <ConnectionProvider endpoint="https://api.devnet.solana.com">
-    <WalletProvider wallets={wallets} autoConnect>
-      <WalletModalProvider>
-        <App />
-      </WalletModalProvider>
-    </WalletProvider>
-  </ConnectionProvider>
+  <BrowserRouter>
+    <ConnectionProvider endpoint="https://api.devnet.solana.com">
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <App />
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  </BrowserRouter>
 );
