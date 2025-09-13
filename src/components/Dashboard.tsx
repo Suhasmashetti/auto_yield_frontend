@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useVaultOperations } from "../hooks/useVaultOperations";
 import {
@@ -24,6 +24,7 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     error,
     isVaultOwner,
     lastTransactionSignature,
+    isInitializing,
 
     // Actions
     handleInitialize,
@@ -35,11 +36,24 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     clearTransactionSignature,
   } = useVaultOperations();
 
+  // Memoize callbacks to prevent unnecessary child re-renders
+  const memoizedClearError = useCallback(() => {
+    setError("");
+  }, [setError]);
+
+  const memoizedClearSignature = useCallback(() => {
+    clearTransactionSignature();
+  }, [clearTransactionSignature]);
+
+  const memoizedSetError = useCallback((errorMsg: string) => {
+    setError(errorMsg);
+  }, [setError]);
+
   useEffect(() => {
     if (connected) {
       refreshData();
     }
-  }, [connected, refreshData]);
+  }, [connected]); // Removed refreshData dependency to prevent re-render loop
 
   // Redirect to landing if disconnected
   useEffect(() => {
@@ -55,14 +69,15 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
 
       <main className="max-w-5xl mx-auto px-6 py-10">
         {/* Error Toast/Alert */}
-        <ErrorDisplay error={error} onClose={() => setError("")} />
+        <ErrorDisplay error={error} onClose={memoizedClearError} />
 
         {connected ? (
-          <div className="grid md:grid-cols-2 gap-6 animate-fade-in-up">
+          <div className="grid md:grid-cols-2 gap-6 ">
             <VaultInfoCard
               vaultInfo={vaultInfo}
               isVaultOwner={isVaultOwner}
               loading={loading}
+              isInitializing={isInitializing}
               onInitialize={handleInitialize}
               onFixAuthorities={handleFixAuthorities}
             />
@@ -75,12 +90,12 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
                 onDeposit={handleDeposit}
                 onWithdraw={handleWithdraw}
                 lastTransactionSignature={lastTransactionSignature}
-                onClearSignature={clearTransactionSignature}
+                onClearSignature={memoizedClearSignature}
               />
             )}
 
             {/* Show Dev Tools only for vault owner */}
-            {isVaultOwner && <DevelopmentUtils onError={setError} vaultInfo={vaultInfo} />}
+            {isVaultOwner && <DevelopmentUtils onError={memoizedSetError} vaultInfo={vaultInfo} />}
           </div>
         ) : (
           <div className="text-center text-gray-400 mt-16">

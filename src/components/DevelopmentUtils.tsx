@@ -2,7 +2,7 @@ import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { getAssociatedTokenAddressSync, getAccount } from "@solana/spl-token";
 import { useProgram } from "../lib/anchorclient";
 import { deriveVaultPDAs } from "../utils/vault";
-import { VAULT_AUTHORITY, USDC_MINT } from "../constants/vault";
+import { VAULT_AUTHORITY, USDC_MINT, VAULT_META_DATA_ACCOUNT } from "../constants/vault";
 import type { VaultInfo } from "../types/vault";
 
 interface DevelopmentUtilsProps {
@@ -124,6 +124,13 @@ export function DevelopmentUtils({ onError, vaultInfo }: DevelopmentUtilsProps) 
           <span className="text-gray-400">Vault Authority</span>
           <code className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded font-mono">
             {VAULT_AUTHORITY.toBase58()}
+          </code>
+        </div>
+
+         <div className="flex items-center justify-between py-2 border-b border-gray-700">
+          <span className="text-gray-400">Vault Meta Data Account</span>
+          <code className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded font-mono">
+            {VAULT_META_DATA_ACCOUNT.toBase58()}
           </code>
         </div>
         

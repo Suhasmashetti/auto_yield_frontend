@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { validateAmount } from "../utils/vault";
 
 interface ActionPanelProps {
@@ -9,7 +9,7 @@ interface ActionPanelProps {
   onClearSignature?: () => void;
 }
 
-export function ActionPanel({ 
+export const ActionPanel = memo(function ActionPanel({ 
   loading, 
   onDeposit, 
   onWithdraw, 
@@ -19,12 +19,12 @@ export function ActionPanel({
   const [amount, setAmount] = useState("");
   const [localError, setLocalError] = useState("");
 
-  const handleAmountChange = (value: string) => {
+  const handleAmountChange = useCallback((value: string) => {
     setAmount(value);
     setLocalError("");
-  };
+  }, []);
 
-  const handleDeposit = () => {
+  const handleDeposit = useCallback(() => {
     const validation = validateAmount(amount);
     if (!validation.isValid) {
       setLocalError(validation.error!);
@@ -33,9 +33,9 @@ export function ActionPanel({
 
     onDeposit(amount);
     setAmount("");
-  };
+  }, [amount, onDeposit]);
 
-  const handleWithdraw = () => {
+  const handleWithdraw = useCallback(() => {
     const validation = validateAmount(amount);
     if (!validation.isValid) {
       setLocalError(validation.error!);
@@ -44,7 +44,7 @@ export function ActionPanel({
 
     onWithdraw(amount);
     setAmount("");
-  };
+  }, [amount, onWithdraw]);
 
   const isAmountValid = amount && parseFloat(amount) > 0;
 
@@ -57,7 +57,7 @@ export function ActionPanel({
 
       <div className="space-y-4">
         {/* Input */}
-        <div className="animate-fade-in-up">
+        <div className="">
           <label className="block text-sm font-medium text-gray-300 mb-2 uppercase tracking-wider">
             Amount (USDC / yUSDC)
           </label>
@@ -82,7 +82,7 @@ export function ActionPanel({
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-4 animate-fade-in-up animation-delay-300">
+        <div className="flex gap-4">
           <button
             onClick={handleDeposit}
             disabled={loading || !isAmountValid}
@@ -160,4 +160,4 @@ export function ActionPanel({
       </div>
     </div>
   );
-}
+});
