@@ -1,31 +1,79 @@
-# Auto Yield Frontend - Testing Guide
+# Auto Yield Frontend
 
-This is a basic frontend for testing the Auto Yield vault smart contract on Solana Devnet.
+A modern React + TypeScript frontend for the Auto Yield vault smart contract on Solana Devnet. Features a clean, modular architecture with organized components and optimized blockchain interactions.
 
-## Folder Structure
+## 📁 Project Structure
 
-src/components/
-├── dashboardcomponents/
-│   ├── ActionPanel.tsx          # Deposit/withdraw actions
-│   ├── DevelopmentUtils.tsx     # Dev tools & debugging utilities
-│   ├── ErrorDisplay.tsx         # Error handling component
-│   ├── Header.tsx              # Dashboard navigation header
-│   ├── UserBalancesCard.tsx    # User's USDC/yUSDC balances
-│   ├── VaultInfoCard.tsx       # Vault statistics & info
-│   └── index.ts                # Clean exports
-├── landingpagecomponents/       # Already structured
-├── Dashboard.tsx                # Main dashboard orchestrator
-└── index.ts                     # Updated exports
+```
+auto-yield-frontend/
+├── src/
+│   ├── components/
+│   │   ├── dashboardcomponents/           # Dashboard-specific components
+│   │   │   ├── ActionPanel.tsx           # Deposit/withdraw actions UI
+│   │   │   ├── DevelopmentUtils.tsx      # Debug tools & utilities
+│   │   │   ├── ErrorDisplay.tsx          # Error handling component
+│   │   │   ├── Header.tsx               # Dashboard navigation header
+│   │   │   ├── UserBalancesCard.tsx     # User's USDC/yUSDC balances
+│   │   │   ├── VaultInfoCard.tsx        # Vault statistics & information
+│   │   │   └── index.ts                 # Clean component exports
+│   │   ├── landingpagecomponents/        # Landing page sections
+│   │   │   ├── AggregatorCard.tsx       # Reusable aggregator display cards
+│   │   │   ├── CallToAction.tsx         # CTA section component
+│   │   │   ├── Features.tsx             # Features showcase section
+│   │   │   ├── Footer.tsx               # Landing page footer
+│   │   │   ├── Hero.tsx                 # Hero section with aggregators
+│   │   │   ├── Navigation.tsx           # Main navigation component
+│   │   │   ├── Stats.tsx                # Statistics display section
+│   │   │   └── index.ts                 # Clean component exports
+│   │   ├── shadcomponents/               # UI utility components
+│   │   │   └── GridBackground.tsx       # Grid background effect
+│   │   ├── Dashboard.tsx                # Main dashboard orchestrator
+│   │   ├── LandingPage.tsx             # Main landing page orchestrator
+│   │   └── index.ts                     # Main component exports
+│   ├── hooks/
+│   │   └── useVaultOperations.ts        # Custom hook for vault operations
+│   ├── lib/
+│   │   └── anchorclient.ts              # Anchor program client setup
+│   ├── utils/
+│   │   └── vault.ts                     # Vault utility functions
+│   ├── types/
+│   │   └── vault.ts                     # TypeScript type definitions
+│   ├── constants/
+│   │   └── vault.ts                     # App constants and addresses
+│   ├── idl/
+│   │   └── auto_yield.json              # Program IDL for type safety
+│   ├── App.tsx                          # Main app with routing
+│   ├── main.tsx                         # React app initialization
+│   └── index.css                        # Global styles
+├── package.json                         # Dependencies and scripts
+├── vite.config.ts                       # Vite configuration
+├── tailwind.config.js                   # Tailwind CSS configuration
+└── tsconfig.json                        # TypeScript configuration
+```
 
-## Features
+## ✨ Features
 
+### 🎯 User Interface
+- **Modern Landing Page**: Clean design with aggregator showcases and features
+- **Dashboard Interface**: Comprehensive vault management and monitoring
+- **Responsive Design**: Works seamlessly across desktop and mobile devices
+- **React Router Integration**: Smooth client-side navigation between sections
+
+### 💰 Core Functionality  
 - **Wallet Connection**: Connect using Phantom, Solflare, or other Solana wallets
-- **Vault Initialization**: Initialize a new yield vault (one-time setup)
-- **Deposit USDC**: Deposit USDC tokens to earn yield
-- **Withdraw yUSDC**: Withdraw your yield tokens back to USDC
-- **Real-time Balances**: View your USDC and yUSDC balances
-- **Exchange Rate**: See the current yUSDC to USDC exchange rate
-- **Development Utilities**: Testing tools for debugging and account management
+- **Vault Management**: Initialize and manage yield vaults (one-time setup)
+- **Smart Staking**: Deposit USDC tokens to earn yield with account validation
+- **Flexible Withdrawals**: Withdraw yUSDC tokens back to USDC seamlessly
+- **Real-time Balances**: Live updates of USDC and yUSDC token balances
+- **Exchange Rate Tracking**: Monitor current yUSDC to USDC exchange rates
+
+### 🔧 Developer Experience
+- **TypeScript Integration**: Full type safety throughout the application
+- **Modular Architecture**: Organized components for maintainability
+- **Optimized API Calls**: Reduced blockchain calls for better performance  
+- **Development Utilities**: Built-in debugging tools and account management
+- **Error Handling**: Comprehensive error states with user-friendly messages
+- **Loading States**: Smooth transitions and loading indicators
 
 ## Getting Started
 
@@ -138,12 +186,28 @@ spl-token mint 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU 1000 <YOUR_TOKEN_ACC
 
 Alternatively, you can modify the `USDC_MINT` constant in `src/App.tsx` to use a mint you control.
 
-## Code Structure
+## 🏗️ Architecture & Code Structure
 
-- `src/App.tsx`: Main application component with all functionality
-- `src/lib/anchorclient.ts`: Anchor program client setup
-- `src/idl/auto_yield.json`: Program IDL for type safety
-- `src/main.tsx`: React app initialization with wallet providers
+### Component Organization
+- **Modular Design**: Separate folders for dashboard and landing page components
+- **Reusable Components**: `AggregatorCard` eliminates code duplication
+- **Clean Exports**: Each component folder has organized `index.ts` exports
+- **Single Responsibility**: Each component handles one specific concern
+
+### Key Files
+- `src/App.tsx`: Main routing and wallet state management
+- `src/hooks/useVaultOperations.ts`: Centralized vault operations and state
+- `src/lib/anchorclient.ts`: Anchor program client configuration
+- `src/utils/vault.ts`: Utility functions for vault operations
+- `src/types/vault.ts`: TypeScript interfaces and type definitions
+- `src/constants/vault.ts`: Application constants and addresses
+- `src/idl/auto_yield.json`: Program IDL ensuring type safety
+
+### Performance Optimizations
+- **Single API Call Strategy**: Optimized account checking reduces blockchain calls
+- **Memoized Components**: React.memo prevents unnecessary re-renders
+- **Stable References**: useCallback hooks prevent render loops
+- **Loading States**: Prevents flash of wrong content during wallet connection
 
 ## Next Steps
 
