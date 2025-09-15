@@ -1,6 +1,7 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { AggregatorCard } from "./AggregatorCard";
 
+
 interface HeroProps {
   onGetStarted: () => void;
 }
@@ -8,22 +9,28 @@ interface HeroProps {
 // Aggregator data
 const aggregators = [
   {
-    name: "Yearn Finance",
-    description: "Auto-compounding strategies",
-    apy: "8.2",
-    icon: "Y"
+    name: "Tulip Garden",
+    description: "USDC yield vaults",
+    apy: "8.5",
+    icon: "T"
   },
   {
-    name: "Aave Protocol",
-    description: "Lending & borrowing",
+    name: "Francium",
+    description: "USDC LP farming",
+    apy: "9.2",
+    icon: "F"
+  },
+  {
+    name: "Kamino Finance",
+    description: "Concentrated liquidity",
+    apy: "10.1",
+    icon: "K"
+  },
+  {
+    name: "Solend",
+    description: "USDC lending",
     apy: "7.8",
-    icon: "A"
-  },
-  {
-    name: "Marinade",
-    description: "Liquid staking",
-    apy: "9.1",
-    icon: "M"
+    icon: "S"
   }
 ];
 
@@ -40,13 +47,13 @@ export function Hero({ onGetStarted }: HeroProps) {
             {/* Main Heading */}
             <div>
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight tracking-tight">
-                <span className="text-white">STOP</span>
+                <span className="text-white/80">STOP</span>
                 <br />
-                <span className="text-white">HOLDING</span>
+                <span className="text-white/80">HOLDING</span>
                 <br />
-                <span className="text-white border-2 border-white px-4 py-1 inline-block">START</span>
+                <span className="text-white/80 border-2 border-white px-4 py-1 inline-block">START</span>
                 <br />
-                <span className="text-white">YIELDING</span>
+                <span className="text-white/80">YIELDING</span>
               </h1>
               <div className="flex items-center space-x-2 mt-6">
                 <img src="https://cdn3.emoji.gg/emojis/7187-solana.png" alt="Solana" className="w-6 h-6" />
@@ -83,8 +90,8 @@ export function Hero({ onGetStarted }: HeroProps) {
             </div>
           </div>
 
-          {/* Right Side - Available Aggregators Cards */}
-          <div>
+          {/* Right Side - Available Aggregators Cards & Smart Routing */}
+          <div className="space-y-8">
             <div className="space-y-4">
               <h3 className="text-xl font-semibold text-white mb-6 text-center">Available Yield Aggregators</h3>
               
