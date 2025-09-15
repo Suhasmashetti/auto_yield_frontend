@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+
 import { useVaultOperations } from "../hooks/useVaultOperations";
 import {
   Header,
@@ -8,6 +9,7 @@ import {
   ActionPanel,
   DevelopmentUtils,
   ErrorDisplay,
+  SmartRouting,
 } from "../components/dashboardcomponents";
 
 interface DashboardProps {
@@ -16,8 +18,8 @@ interface DashboardProps {
 
 export function Dashboard({ onBackToLanding }: DashboardProps) {
   const { connected } = useWallet();
+
   const {
-    // State
     vaultInfo,
     userBalances,
     loading,
@@ -25,8 +27,6 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     isVaultOwner,
     lastTransactionSignature,
     isInitializing,
-
-    // Actions
     handleInitialize,
     handleDeposit,
     handleWithdraw,
@@ -36,7 +36,7 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     clearTransactionSignature,
   } = useVaultOperations();
 
-  // Memoize callbacks to prevent unnecessary child re-renders
+  // Memoized callbacks
   const memoizedClearError = useCallback(() => {
     setError("");
   }, [setError]);
@@ -45,17 +45,21 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     clearTransactionSignature();
   }, [clearTransactionSignature]);
 
-  const memoizedSetError = useCallback((errorMsg: string) => {
-    setError(errorMsg);
-  }, [setError]);
+  const memoizedSetError = useCallback(
+    (errorMsg: string) => {
+      setError(errorMsg);
+    },
+    [setError]
+  );
 
+  // Refresh vault data when wallet connects
   useEffect(() => {
     if (connected) {
       refreshData();
     }
-  }, [connected]); // Removed refreshData dependency to prevent re-render loop
+  }, [connected]); // Avoid refresh loop
 
-  // Redirect to landing if disconnected
+  // Redirect if wallet disconnects
   useEffect(() => {
     if (!connected) {
       onBackToLanding();
@@ -72,31 +76,43 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
         <ErrorDisplay error={error} onClose={memoizedClearError} />
 
         {connected ? (
-          <div className="grid md:grid-cols-2 gap-6 ">
-            <VaultInfoCard
-              vaultInfo={vaultInfo}
-              isVaultOwner={isVaultOwner}
-              loading={loading}
-              isInitializing={isInitializing}
-              onInitialize={handleInitialize}
-              onFixAuthorities={handleFixAuthorities}
-            />
+          <>
+            {/* Smart Routing Section */}
+            <div className="mb-8">
+              <SmartRouting />
+            </div>
 
-            <UserBalancesCard userBalances={userBalances} />
-
-            {vaultInfo && (
-              <ActionPanel
+            <div className="grid md:grid-cols-2 gap-6">
+              <VaultInfoCard
+                vaultInfo={vaultInfo}
+                isVaultOwner={isVaultOwner}
                 loading={loading}
-                onDeposit={handleDeposit}
-                onWithdraw={handleWithdraw}
-                lastTransactionSignature={lastTransactionSignature}
-                onClearSignature={memoizedClearSignature}
+                isInitializing={isInitializing}
+                onInitialize={handleInitialize}
+                onFixAuthorities={handleFixAuthorities}
               />
-            )}
 
-            {/* Show Dev Tools only for vault owner */}
-            {isVaultOwner && <DevelopmentUtils onError={memoizedSetError} vaultInfo={vaultInfo} />}
-          </div>
+              <UserBalancesCard userBalances={userBalances} />
+
+              {vaultInfo && (
+                <ActionPanel
+                  loading={loading}
+                  onDeposit={handleDeposit}
+                  onWithdraw={handleWithdraw}
+                  lastTransactionSignature={lastTransactionSignature}
+                  onClearSignature={memoizedClearSignature}
+                />
+              )}
+
+              {/* Dev Tools only for vault owner */}
+              {isVaultOwner && (
+                <DevelopmentUtils
+                  onError={memoizedSetError}
+                  vaultInfo={vaultInfo}
+                />
+              )}
+            </div>
+          </>
         ) : (
           <div className="text-center text-gray-400 mt-16">
             <p className="text-lg">Connect your wallet</p>
