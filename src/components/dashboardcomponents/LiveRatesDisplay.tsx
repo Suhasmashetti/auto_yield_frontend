@@ -1,154 +1,130 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import franciumPng from "../../assets/icons/francium.png";
+import plutoPng from "../../assets/icons/pluto.png";
 
-interface ProtocolData {
-  protocol: string;
+
+interface PoolData {
+  symbol: string;
+  project: string;
   apy: number;
-  source: string;
-  error?: string;
-  timestamp: string;
-  thirtyDayApy?: number;
+  pool: string;
+  chain: string;
+  tvlUsd: number;
 }
 
 interface APIResponse {
-  data: ProtocolData[];
+  usdcPools: PoolData[];
+  bestPool: PoolData;
+  source: string;
   timestamp: string;
 }
 
-// Protocol icons and colors
+// Protocol icons and colors (only francium and pluto)
 const protocolConfig = {
-  tulip: {
-    name: "Tulip Garden",
-    icon: "🌷",
-    color: "from-pink-500 to-rose-600"
-  },
   francium: {
     name: "Francium",
-    icon: "⚡",
+    icon: franciumPng,
     color: "from-yellow-500 to-orange-600"
   },
-  kamino: {
-    name: "Kamino Finance",
-    icon: "🌊",
-    color: "from-blue-500 to-cyan-600"
-  },
-  solend: {
-    name: "Solend",
-    icon: "💎",
-    color: "from-purple-500 to-indigo-600"
-  },
-  marginfi: {
-    name: "MarginFi",
-    icon: "📊",
-    color: "from-green-500 to-emerald-600"
+  pluto: {
+    name: "Pluto",
+    icon: plutoPng,
+    color: "from-blue-500 to-indigo-600"
   }
 };
 
 export function LiveRatesDisplay() {
-  const [protocols, setProtocols] = useState<ProtocolData[]>([]);
+  const [pools, setPools] = useState<PoolData[]>([]);
+  const [bestPool, setBestPool] = useState<PoolData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [selectedCurrency, setSelectedCurrency] = useState("USDC");
-
-  const currencies = ["USDC"];
+  // Only USDC supported for now
+  const selectedCurrency = "USDC";
 
   // Cache key and expiration time (15 minutes)
   const CACHE_KEY = 'apy_data_cache';
   const CACHE_EXPIRATION = 15 * 60 * 1000; // 15 minutes in milliseconds
 
-  const getCachedData = (): { data: ProtocolData[]; timestamp: string } | null => {
+  const getCachedData = useCallback(() => {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (!cached) return null;
-
-      const { data, timestamp, expiry } = JSON.parse(cached);
-      
-      // Check if cache is still valid
+      const { pools, bestPool, timestamp, expiry } = JSON.parse(cached);
       if (Date.now() < expiry) {
-        return { data, timestamp };
+        return { pools, bestPool, timestamp };
       }
-      
-      // Cache expired, remove it
       localStorage.removeItem(CACHE_KEY);
       return null;
     } catch (err) {
-      console.error('Error reading cache:', err);
       localStorage.removeItem(CACHE_KEY);
       return null;
     }
-  };
+  }, []);
 
-  const setCachedData = (data: ProtocolData[], timestamp: string) => {
+  const setCachedData = useCallback((pools: PoolData[], bestPool: PoolData | null, timestamp: string) => {
     try {
       const cacheData = {
-        data,
+        pools,
+        bestPool,
         timestamp,
         expiry: Date.now() + CACHE_EXPIRATION
       };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-    } catch (err) {
-      console.error('Error setting cache:', err);
-    }
-  };
+    } catch {}
+  }, []);
 
-  const fetchAPYData = async (useCache = true) => {
+  const fetchAPYData = useCallback(async (useCache = true) => {
     try {
       setLoading(true);
       setError(null);
-
-      // Try to get data from cache first
       if (useCache) {
         const cachedData = getCachedData();
         if (cachedData) {
-          setProtocols(cachedData.data);
+          setPools(cachedData.pools);
+          setBestPool(cachedData.bestPool);
           setLastUpdated(cachedData.timestamp);
           setLoading(false);
           return;
         }
       }
-
-      // Fetch fresh data from API
-      const response = await fetch("http://localhost:3001/api/all-apys");
+      const response = await fetch("http://localhost:5000/api/usdc-apy");
       const data: APIResponse = await response.json();
-
-      setProtocols(data.data);
+      setPools(data.usdcPools);
+      setBestPool(data.bestPool);
       setLastUpdated(data.timestamp);
-      
-      // Cache the new data
-      setCachedData(data.data, data.timestamp);
+      setCachedData(data.usdcPools, data.bestPool, data.timestamp);
     } catch (err) {
       setError("Failed to fetch APY data");
-      console.error("APY fetch error:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [getCachedData, setCachedData]);
 
   useEffect(() => {
     fetchAPYData(true); // Use cache on initial load
     const interval = setInterval(() => fetchAPYData(false), 3600000); // Force fresh data hourly
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchAPYData]);
 
-  const getProtocolConfig = (protocol: string) => {
+  const getProtocolConfig = useCallback((protocol: string) => {
     return protocolConfig[protocol as keyof typeof protocolConfig] || {
       name: protocol,
       icon: "🔷",
       color: "from-gray-500 to-gray-600"
     };
-  };
+  }, []);
 
-  const formatTime = (timestamp: string) => {
+  const formatTime = useCallback((timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
     });
-  };
+  }, []);
 
-  const sortedProtocols = protocols.sort((a, b) => b.apy - a.apy);
-  const highestAPY = protocols.length > 0 ? Math.max(...protocols.map((p) => p.apy)) : 0;
-  const liveProtocols = protocols.filter((p) => !p.error);
+  const sortedPools = useMemo(() => [...pools].sort((a, b) => b.apy - a.apy), [pools]);
+  const highestAPY = useMemo(() => pools.length > 0 ? Math.max(...pools.map((p) => p.apy)) : 0, [pools]);
 
   if (loading) {
     return (
@@ -197,21 +173,7 @@ export function LiveRatesDisplay() {
             </svg>
           </button>
           
-          <div className="flex bg-gray-800 rounded-lg p-1">
-            {currencies.map((currency) => (
-              <button
-                key={currency}
-                onClick={() => setSelectedCurrency(currency)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
-                  selectedCurrency === currency
-                    ? "bg-white text-black"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {currency}
-              </button>
-            ))}
-          </div>
+          {/* Only USDC supported, so no currency selector needed */}
           
           {lastUpdated && (
             <div className="text-right text-xs text-gray-400">
@@ -228,15 +190,14 @@ export function LiveRatesDisplay() {
         </div>
       )}
 
-      {/* Protocol cards grid */}
+      {/* Pool cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-        {sortedProtocols.map((protocol) => {
-          const config = getProtocolConfig(protocol.protocol);
-          const isHighest = protocol.apy === highestAPY;
-          
+        {sortedPools.map((pool) => {
+          const config = getProtocolConfig(pool.project);
+          const isHighest = pool.apy === highestAPY;
           return (
             <div
-              key={protocol.protocol}
+              key={pool.pool}
               className={`bg-gray-900 rounded-lg p-4 border transition-all duration-200 hover:bg-gray-800 ${
                 isHighest 
                   ? "border-green-500 ring-1 ring-green-500/20" 
@@ -244,9 +205,8 @@ export function LiveRatesDisplay() {
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 bg-gradient-to-r ${config.color} rounded-full flex items-center justify-center text-lg`}>
-                  {config.icon}
-                </div>
+                  <img src={config.icon} alt={config.name} className="w-8 h-8 object-contain" />
+                
                 {isHighest && (
                   <div className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
                     Best
@@ -258,38 +218,20 @@ export function LiveRatesDisplay() {
                 <h3 className="text-white font-medium text-sm">
                   {config.name}
                 </h3>
-                
                 <div className="text-right">
                   <div className="text-2xl font-bold text-white">
-                    {protocol.apy.toFixed(2)}%
+                    {pool.apy.toFixed(2)}%
                   </div>
                   <div className="text-xs text-gray-400">
-                    {protocol.thirtyDayApy ? 
-                      `${protocol.thirtyDayApy.toFixed(2)}% (30d)` : 
-                      "Current APY"
-                    }
+                    TVL: ${pool.tvlUsd.toLocaleString()}
                   </div>
                 </div>
-
                 <div className="flex items-center justify-between text-xs">
-                  <div className={`px-2 py-1 rounded border ${
-                    protocol.error
-                      ? "text-red-400 border-red-700/50 bg-red-900/20"
-                      : protocol.source === "fallback"
-                      ? "text-yellow-400 border-yellow-700/50 bg-yellow-900/20"
-                      : "text-green-400 border-green-700/50 bg-green-900/20"
-                  }`}>
-                    {protocol.error ? "Offline" : 
-                     protocol.source === "fallback" ? "Fallback" : "Live"
-                    }
+                  <div className="px-2 py-1 rounded border text-green-400 border-green-700/50 bg-green-900/20">
+                    Live
                   </div>
+                  <span className="text-gray-400">{pool.chain}</span>
                 </div>
-
-                {protocol.error && (
-                  <div className="mt-2 p-2 bg-red-900/20 border border-red-800 rounded text-xs">
-                    <p className="text-red-400">Using estimated rate</p>
-                  </div>
-                )}
               </div>
             </div>
           );
@@ -297,34 +239,30 @@ export function LiveRatesDisplay() {
       </div>
 
       {/* Quick stats summary */}
-      {protocols.length > 0 && (
+      {pools.length > 0 && bestPool && (
         <div className="bg-gray-900 rounded-lg p-6">
           <div className="grid grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-white mb-1">
-                {highestAPY.toFixed(2)}%
+                {bestPool.apy.toFixed(2)}%
               </div>
               <div className="text-sm text-gray-400">Best Rate</div>
               <div className="text-xs text-gray-500 mt-1">
-                {getProtocolConfig(
-                  protocols.find((p) => p.apy === highestAPY)?.protocol || ""
-                ).name}
+                {getProtocolConfig(bestPool.project).name}
               </div>
             </div>
-            
             <div className="text-center">
               <div className="text-2xl font-bold text-white mb-1">
-                {(protocols.reduce((sum, p) => sum + p.apy, 0) / protocols.length).toFixed(2)}%
+                {(pools.reduce((sum, p) => sum + p.apy, 0) / pools.length).toFixed(2)}%
               </div>
               <div className="text-sm text-gray-400">Average Rate</div>
               <div className="text-xs text-gray-500 mt-1">
                 Across all protocols
               </div>
             </div>
-            
             <div className="text-center">
               <div className="text-2xl font-bold text-white mb-1">
-                {liveProtocols.length}/{protocols.length}
+                {pools.length}
               </div>
               <div className="text-sm text-gray-400">Live Sources</div>
               <div className="text-xs text-gray-500 mt-1">
