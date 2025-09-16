@@ -4,12 +4,13 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useVaultOperations } from "../hooks/useVaultOperations";
 import {
   Header,
-  VaultInfoCard,
-  UserBalancesCard,
-  ActionPanel,
   DevelopmentUtils,
   ErrorDisplay,
-  SmartRouting,
+  PortfolioOverview,
+  TabNavigation,
+  useTabNavigation,
+  AssetsDisplay,
+  LiveRatesDisplay,
 } from "../components/dashboardcomponents";
 
 interface DashboardProps {
@@ -18,6 +19,7 @@ interface DashboardProps {
 
 export function Dashboard({ onBackToLanding }: DashboardProps) {
   const { connected } = useWallet();
+  const { activeTab, setActiveTab } = useTabNavigation("portfolio");
 
   const {
     vaultInfo,
@@ -25,15 +27,10 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     loading,
     error,
     isVaultOwner,
-    lastTransactionSignature,
-    isInitializing,
-    handleInitialize,
     handleDeposit,
     handleWithdraw,
-    handleFixAuthorities,
     refreshData,
     setError,
-    clearTransactionSignature,
   } = useVaultOperations();
 
   // Memoized callbacks
@@ -41,9 +38,6 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     setError("");
   }, [setError]);
 
-  const memoizedClearSignature = useCallback(() => {
-    clearTransactionSignature();
-  }, [clearTransactionSignature]);
 
   const memoizedSetError = useCallback(
     (errorMsg: string) => {
@@ -52,12 +46,42 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     [setError]
   );
 
+  // Calculate portfolio values based on user's individual balance
+  const totalValue = userBalances.yusdcBalance || 0; // User's deposited amount in yUSDC
+  const interestEarned = 0; // Calculate based on your logic
+  
+  // Real data for assets and allocations based on user's balance
+  const mockAssets = totalValue > 0 ? [{
+    symbol: "yUSDC",
+    name: "Yield USDC",
+    amount: totalValue,
+    value: totalValue,
+    apy: 8.5,
+    protocol: "Auto Yield"
+  }] : [];
+
+  const mockAllocations = totalValue > 0 ? [{
+    protocol: "Auto Yield Vault",
+    amount: totalValue,
+    percentage: 100,
+    apy: 8.5
+  }] : [];
+
+  // Handlers for the PortfolioOverview component
+  const handlePortfolioDeposit = useCallback((amount: string) => {
+    handleDeposit(amount);
+  }, [handleDeposit]);
+
+  const handlePortfolioWithdraw = useCallback((amount: string) => {
+    handleWithdraw(amount);
+  }, [handleWithdraw]);
+
   // Refresh vault data when wallet connects
   useEffect(() => {
     if (connected) {
       refreshData();
     }
-  }, [connected]); // Avoid refresh loop
+  }, [connected, refreshData]);
 
   // Redirect if wallet disconnects
   useEffect(() => {
@@ -66,62 +90,103 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     }
   }, [connected, onBackToLanding]);
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "portfolio":
+        return (
+          <>
+          <LiveRatesDisplay />
+            <AssetsDisplay 
+              assets={mockAssets}
+              allocations={mockAllocations}
+              loading={loading}
+            />
+            {/* <LiveRatesDisplay /> */}
+          </>
+        );
+      case "insights":
+        return (
+          <div className="px-4 py-12 text-center">
+            <h2 className="text-2xl font-semibold text-white mb-4">Insights</h2>
+            <p className="text-gray-400">Performance analytics and insights coming soon.</p>
+          </div>
+        );
+      case "activity":
+        return (
+          <div className="px-4 py-12 text-center">
+            <h2 className="text-2xl font-semibold text-white mb-4">Activity</h2>
+            <p className="text-gray-400">Transaction history and activity feed coming soon.</p>
+          </div>
+        );
+      case "rewards":
+        return (
+          <div className="px-4 py-12 text-center">
+            <h2 className="text-2xl font-semibold text-white mb-4">Rewards</h2>
+            <p className="text-gray-400">Loyalty rewards and bonuses coming soon.</p>
+          </div>
+        );
+      case "referrals":
+        return (
+          <div className="px-4 py-12 text-center">
+            <h2 className="text-2xl font-semibold text-white mb-4">Referrals</h2>
+            <p className="text-gray-400">Refer friends and earn rewards coming soon.</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <Header />
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
-        {/* Error Toast/Alert */}
-        <ErrorDisplay error={error} onClose={memoizedClearError} />
+      {/* Error Toast/Alert */}
+      <ErrorDisplay error={error} onClose={memoizedClearError} />
 
-        {connected ? (
-          <>
-            {/* Smart Routing Section */}
-            <div className="mb-8">
-              <SmartRouting />
-            </div>
+      {connected ? (
+        <div className="max-w-4xl mx-auto">
+          {/* Portfolio Overview */}
+          <PortfolioOverview
+            totalValue={totalValue}
+            interestEarned={interestEarned}
+            onDeposit={handlePortfolioDeposit}
+            onWithdraw={handlePortfolioWithdraw}
+            loading={loading}
+          />
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <VaultInfoCard
+          {/* Tab Navigation */}
+          <TabNavigation 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab} 
+          />
+
+          {/* Tab Content */}
+          <main className="pb-8">
+            {renderTabContent()}
+          </main>
+
+          {/* Development Tools - Only visible for vault owner */}
+          {isVaultOwner && (
+            <div className="mt-8">
+              <DevelopmentUtils
+                onError={memoizedSetError}
                 vaultInfo={vaultInfo}
-                isVaultOwner={isVaultOwner}
-                loading={loading}
-                isInitializing={isInitializing}
-                onInitialize={handleInitialize}
-                onFixAuthorities={handleFixAuthorities}
               />
-
-              <UserBalancesCard userBalances={userBalances} />
-
-              {vaultInfo && (
-                <ActionPanel
-                  loading={loading}
-                  onDeposit={handleDeposit}
-                  onWithdraw={handleWithdraw}
-                  lastTransactionSignature={lastTransactionSignature}
-                  onClearSignature={memoizedClearSignature}
-                />
-              )}
-
-              {/* Dev Tools only for vault owner */}
-              {isVaultOwner && (
-                <DevelopmentUtils
-                  onError={memoizedSetError}
-                  vaultInfo={vaultInfo}
-                />
-              )}
             </div>
-          </>
-        ) : (
-          <div className="text-center text-gray-400 mt-16">
+          )}
+        </div>
+      ) : (
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center text-gray-400 mt-12 px-4">
             <p className="text-lg">Connect your wallet</p>
             <p className="text-sm mt-2">
               Access vault details, manage deposits, and track balances
             </p>
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   );
 }
