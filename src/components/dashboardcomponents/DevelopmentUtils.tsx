@@ -86,27 +86,27 @@ export function DevelopmentUtils({ onError, vaultInfo }: DevelopmentUtilsProps) 
   const isVaultOwner = publicKey && publicKey.equals(VAULT_AUTHORITY);
 
   return (
-    <div className="md:col-span-2 bg-black-900  border border-gray-700 p-6">
-      <h2 className="text-lg font-medium mb-6 text-gray-100">Development Utils</h2>
+    <div className="bg-gray-900 rounded-lg border border-gray-700 p-6">
+      <h2 className="text-lg font-medium mb-6 text-white">Development Utils</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
         <button
           onClick={logPDAs}
-          className="bg-black-800 hover:bg-gray-700 text-gray-200 px-4 py-2.5  text-sm font-medium transition-colors border border-gray-600"
+          className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-gray-600"
         >
           Log PDAs
         </button>
         
         <button
           onClick={checkUSDCAccount}
-          className="bg-black-800 hover:bg-gray-700 text-gray-200 px-4 py-2.5  text-sm font-medium transition-colors border border-gray-600"
+          className="bg-gray-800 hover:bg-gray-700 text-gray-200 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-gray-600"
         >
           Check USDC
         </button>
         
         <button
           onClick={requestAirdrop}
-          className="bg-black-600 hover:bg-gray-700 text-white px-4 py-2.5  text-sm font-medium transition-colors border-gray-600 border"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border border-blue-500"
         >
           SOL Airdrop
         </button>
@@ -154,8 +154,8 @@ export function DevelopmentUtils({ onError, vaultInfo }: DevelopmentUtilsProps) 
         
         {isVaultOwner && (
           <div className="flex items-center py-2">
-            <div className="w-2 h-2 bg-white-400 rounded-full mr-2"></div>
-            <span className="text-white-400 text-sm font-medium">Vault Owner</span>
+            <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+            <span className="text-green-400 text-sm font-medium">Vault Owner</span>
           </div>
         )}
       </div>
