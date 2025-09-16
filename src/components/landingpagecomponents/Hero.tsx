@@ -1,6 +1,8 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { AggregatorCard } from "./AggregatorCard";
-
+import  kamino   from "../../assets/icons/kamino.png";
+import  solend   from "../../assets/icons/solend.png";
+import francium from "../../assets/icons/francium.png";
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -9,28 +11,22 @@ interface HeroProps {
 // Aggregator data
 const aggregators = [
   {
-    name: "Tulip Garden",
-    description: "USDC yield vaults",
-    apy: "8.5",
-    icon: "T"
-  },
-  {
     name: "Francium",
     description: "USDC LP farming",
     apy: "9.2",
-    icon: "F"
+    icon: francium
   },
   {
     name: "Kamino Finance",
     description: "Concentrated liquidity",
     apy: "10.1",
-    icon: "K"
+    icon: kamino
   },
   {
     name: "Solend",
     description: "USDC lending",
     apy: "7.8",
-    icon: "S"
+    icon: solend
   }
 ];
 
@@ -38,15 +34,15 @@ export function Hero({ onGetStarted }: HeroProps) {
   const { connected } = useWallet();
 
   return (
-    <div className="relative z-10 min-h-screen flex items-center">
-      <div className="max-w-7xl mx-auto px-6 w-full">
+    <div className="relative z-10 min-h-screen flex items-center pt-20">
+      <div className="max-w-7xl mx-auto px-7 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
           {/* Left Side - Main Content */}
-          <div className="space-y-8">
+          <div className="space-y-4">
             {/* Main Heading */}
             <div>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight tracking-tight">
+              <h1 className="text-4xl md:text-7xl lg:text-8xl font-bold leading-tight tracking-tight">
                 <span className="text-white/80">STOP</span>
                 <br />
                 <span className="text-white/80">HOLDING</span>
