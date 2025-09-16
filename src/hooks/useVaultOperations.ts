@@ -19,7 +19,7 @@ export function useVaultOperations() {
   const [error, setError] = useState("");
   const [isVaultOwner, setIsVaultOwner] = useState(false);
   const [lastTransactionSignature, setLastTransactionSignature] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true); // Add initialization state
+  const [isInitializing, setIsInitializing] = useState(true);
   
   // Prevent multiple simultaneous API calls
   const isLoadingRef = useRef(false);
@@ -28,66 +28,48 @@ export function useVaultOperations() {
   // Load user balances (reusable function)
   const loadUserBalances = useCallback(async (currentVaultInfo?: VaultInfo | null) => {
     if (!publicKey || !connection) return;
-    
     try {
-      // Get user USDC balance - single API call optimization
       const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
+      let usdcBalance = 0;
       try {
         const usdcAccount = await getAccount(connection, userUsdcAta);
-        const usdcBalance = Number(usdcAccount.amount) / 1e6;
-        setUserBalances(prev => ({ ...prev, usdcBalance }));
-      } catch (usdcError: any) {
-        // Account doesn't exist or other error - set balance to 0
-        setUserBalances(prev => ({ ...prev, usdcBalance: 0 }));
-      }
+        usdcBalance = Number(usdcAccount.amount) / 1e6;
+      } catch {}
 
-      // Get user yUSDC balance if vault exists - single API call optimization
+      let yusdcBalance = 0;
       if (currentVaultInfo) {
         const userYusdcAta = getAssociatedTokenAddressSync(currentVaultInfo.yusdcMint, publicKey);
         try {
           const yusdcAccount = await getAccount(connection, userYusdcAta);
-          const yusdcBalance = Number(yusdcAccount.amount) / 1e6;
-          setUserBalances(prev => ({ ...prev, yusdcBalance }));
-        } catch (yusdcError: any) {
-          // Account doesn't exist or other error - set balance to 0
-          setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
-        }
-      } else {
-        setUserBalances(prev => ({ ...prev, yusdcBalance: 0 }));
+          yusdcBalance = Number(yusdcAccount.amount) / 1e6;
+        } catch {}
       }
+      setUserBalances({ usdcBalance, yusdcBalance });
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Error loading user balances:", err);
       }
     }
-  }, []); // Empty dependency array since we use parameters instead
+  }, [publicKey, connection]);
 
   // Initialize all data (only called once or manually)
   const initializeData = useCallback(async () => {
     if (!connected || !program || isLoadingRef.current) return;
-    
     isLoadingRef.current = true;
     hasInitialized.current = true;
-    
     try {
-      // Check vault ownership
-      if (publicKey) {
-        setIsVaultOwner(publicKey.equals(VAULT_AUTHORITY));
-      }
-      
-      // Load vault info
+      setIsVaultOwner(!!publicKey && publicKey.equals(VAULT_AUTHORITY));
       const { vaultMetadata } = deriveVaultPDAs(VAULT_AUTHORITY, program);
       let accountInfo;
       try {
         accountInfo = await (program.account as any).vaultMetaData?.fetchNullable(vaultMetadata);
-      } catch (e1) {
+      } catch {
         try {
           accountInfo = await (program.account as any).VaultMetaData?.fetchNullable(vaultMetadata);
-        } catch (e2) {
+        } catch {
           accountInfo = null;
         }
       }
-
       let currentVaultInfo = null;
       if (accountInfo) {
         currentVaultInfo = {
@@ -98,53 +80,65 @@ export function useVaultOperations() {
           vaultUsdc: accountInfo.vaultUsdc,
           lastDepositTime: accountInfo.lastDepositTime.toNumber()
         };
-        setVaultInfo(currentVaultInfo);
-      } else {
-        setVaultInfo(null);
       }
-      
-      // Load user balances using the reusable function
+      setVaultInfo(currentVaultInfo);
       await loadUserBalances(currentVaultInfo);
-      
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.log("Error during initialization:", err);
       }
     } finally {
       isLoadingRef.current = false;
-      setIsInitializing(false); // Mark initialization as complete
+      setIsInitializing(false);
     }
-  }, [connected, program, loadUserBalances]);
+  }, [connected, program, publicKey, loadUserBalances]);
 
   // Initialize when wallet connects
   useEffect(() => {
     if (connected && !hasInitialized.current) {
       initializeData();
     }
-  }, [connected, initializeData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected]);
+
+  // Clear data when wallet changes (publicKey changes)
+  useEffect(() => {
+    if (connected) {
+      setVaultInfo(null);
+      setUserBalances({ usdcBalance: 0, yusdcBalance: 0 });
+      setError("");
+      setLastTransactionSignature(null);
+      setIsVaultOwner(false);
+      hasInitialized.current = false;
+      initializeData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publicKey]);
 
   // Set initial loading state based on connection status
   useEffect(() => {
     if (!connected) {
-      setIsInitializing(false); // No need to initialize if wallet not connected
+      setIsInitializing(false);
+      setVaultInfo(null);
+      setUserBalances({ usdcBalance: 0, yusdcBalance: 0 });
+      setError("");
+      setLastTransactionSignature(null);
+      setIsVaultOwner(false);
+      hasInitialized.current = false;
     }
   }, [connected]);
 
   // Initialize vault
   const handleInitialize = useCallback(async () => {
     if (!program || !publicKey) return;
-    
     if (!publicKey.equals(VAULT_AUTHORITY)) {
       setError("Only the vault owner can initialize the vault.");
       return;
     }
-    
     setLoading(true);
     setError("");
-    
     try {
       const { vaultMetadata, vaultUsdc, yusdcMint } = deriveVaultPDAs(VAULT_AUTHORITY, program);
-      
       const signature = await program.methods.initialize()
         .accounts({
           authority: VAULT_AUTHORITY,
@@ -158,15 +152,16 @@ export function useVaultOperations() {
           rent: SYSVAR_RENT_PUBKEY,
         })
         .rpc();
-
-      console.log("Initialize tx:", signature);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Initialize tx:", signature);
+      }
       setError("");
-      
       await sleep(REFRESH_DELAY_MS);
       await initializeData();
-      
     } catch (err: any) {
-      console.error("Initialize error:", err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Initialize error:", err);
+      }
       setError(formatErrorMessage(err, "Initialize"));
     } finally {
       setLoading(false);
@@ -176,13 +171,10 @@ export function useVaultOperations() {
   // Fix authorities
   const handleFixAuthorities = useCallback(async () => {
     if (!program || !publicKey || !publicKey.equals(VAULT_AUTHORITY)) return;
-    
     setLoading(true);
     setError("");
-    
     try {
       const { vaultMetadata, vaultUsdc, yusdcMint } = deriveVaultPDAs(VAULT_AUTHORITY, program);
-      
       const signature = await program.methods.fixAuthorities()
         .accounts({
           authority: publicKey,
@@ -192,15 +184,16 @@ export function useVaultOperations() {
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc();
-
-      console.log("Fix authorities tx:", signature);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Fix authorities tx:", signature);
+      }
       setError("");
-      
       await sleep(REFRESH_DELAY_MS);
       await initializeData();
-      
     } catch (err: any) {
-      console.error("Fix authorities error:", err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Fix authorities error:", err);
+      }
       setError(formatErrorMessage(err, "Fix authorities"));
     } finally {
       setLoading(false);
@@ -210,48 +203,34 @@ export function useVaultOperations() {
   // Deposit
   const handleDeposit = useCallback(async (amount: string) => {
     if (!program || !publicKey || !amount) return;
-    
     const validation = validateAmount(amount);
     if (!validation.isValid) {
       setError(validation.error!);
       return;
     }
-    
     setLoading(true);
     setError("");
-    
     try {
       const { vaultMetadata, vaultUsdc, yusdcMint } = deriveVaultPDAs(VAULT_AUTHORITY, program);
       const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
       const userYusdcAta = getAssociatedTokenAddressSync(yusdcMint, publicKey);
-      
-      // Single API call optimization: Check balance first, account existence is implicit
-      let userBalance: number;
+      let userBalance = 0;
       try {
         const userUsdcAccount = await getAccount(connection, userUsdcAta);
         userBalance = Number(userUsdcAccount.amount) / 1e6;
       } catch (accountError: any) {
-        // Account doesn't exist - provide helpful error message
-        if (accountError.message && accountError.message.includes('could not find account')) {
-          setError(`You don't have a USDC token account. Please get some devnet USDC first.`);
-        } else if (accountError.name === 'TokenAccountNotFoundError') {
-          setError(`USDC token account not found. Please get some devnet USDC first.`);
-        } else {
-          setError(`Error accessing USDC account: ${accountError.message || accountError.toString()}`);
-        }
+        setError(accountError?.message?.includes('could not find account') || accountError?.name === 'TokenAccountNotFoundError'
+          ? `You don't have a USDC token account. Please get some devnet USDC first.`
+          : `Error accessing USDC account: ${accountError.message || accountError.toString()}`);
         setLoading(false);
         return;
       }
-      
-      // Check if user has sufficient balance
       const depositAmountNumber = parseFloat(amount);
       if (userBalance < depositAmountNumber) {
         setError(`Insufficient USDC balance. You have ${userBalance.toFixed(6)} USDC but trying to deposit ${depositAmountNumber} USDC`);
         setLoading(false);
         return;
       }
-      
-      // Check if user yUSDC ATA exists, create if not
       let createAtaInstruction = null;
       try {
         await getAccount(connection, userYusdcAta);
@@ -263,17 +242,14 @@ export function useVaultOperations() {
           yusdcMint
         );
       }
-
-      const depositAmount = new anchor.BN(usdcToLamports(parseFloat(amount)));
-      
-      // Only log debug info in development
+      const depositAmount = new anchor.BN(usdcToLamports(depositAmountNumber));
       if (process.env.NODE_ENV === 'development') {
-        console.log("Deposit debug info:");
-        console.log("- User:", publicKey.toBase58());
-        console.log("- Authority:", VAULT_AUTHORITY.toBase58());
-        console.log("- Deposit Amount:", depositAmount.toString());
+        console.log("Deposit debug info:", {
+          user: publicKey.toBase58(),
+          authority: VAULT_AUTHORITY.toBase58(),
+          depositAmount: depositAmount.toString()
+        });
       }
-      
       const depositBuilder = program.methods.deposit(depositAmount)
         .accounts({
           user: publicKey,
@@ -289,7 +265,6 @@ export function useVaultOperations() {
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
         });
-
       let signature;
       if (createAtaInstruction) {
         const tx = new Transaction().add(createAtaInstruction);
@@ -299,14 +274,13 @@ export function useVaultOperations() {
       } else {
         signature = await depositBuilder.rpc();
       }
-
-      console.log("Deposit tx:", signature);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Deposit tx:", signature);
+      }
       setError("");
       setLastTransactionSignature(signature);
-      
       await sleep(REFRESH_DELAY_MS);
       await initializeData();
-      
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Deposit error:", err);
@@ -320,21 +294,17 @@ export function useVaultOperations() {
   // Withdraw
   const handleWithdraw = useCallback(async (amount: string) => {
     if (!program || !publicKey || !amount || !vaultInfo) return;
-    
     const validation = validateAmount(amount);
     if (!validation.isValid) {
       setError(validation.error!);
       return;
     }
-    
     setLoading(true);
     setError("");
-    
     try {
       const { vaultMetadata, vaultUsdc, yusdcMint } = deriveVaultPDAs(VAULT_AUTHORITY, program);
       const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
       const userYusdcAta = getAssociatedTokenAddressSync(yusdcMint, publicKey);
-
       const withdrawAmount = new anchor.BN(usdcToLamports(parseFloat(amount)));
       const signature = await program.methods.withdraw(withdrawAmount)
         .accounts({
@@ -352,16 +322,17 @@ export function useVaultOperations() {
           rent: SYSVAR_RENT_PUBKEY,
         })
         .rpc();
-
-      console.log("Withdraw tx:", signature);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Withdraw tx:", signature);
+      }
       setError("");
       setLastTransactionSignature(signature);
-      
       await sleep(REFRESH_DELAY_MS);
       await initializeData();
-      
     } catch (err: any) {
-      console.error("Withdraw error:", err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Withdraw error:", err);
+      }
       setError(formatErrorMessage(err, "Withdraw"));
     } finally {
       setLoading(false);
@@ -369,9 +340,7 @@ export function useVaultOperations() {
   }, [program, publicKey, vaultInfo, initializeData]);
 
   // Refresh all data (for manual refresh) - stable reference
-  const refreshData = useCallback(() => {
-    return initializeData();
-  }, [initializeData]);
+  const refreshData = useCallback(() => initializeData(), [initializeData]);
 
   return {
     // State
