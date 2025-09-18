@@ -86,7 +86,7 @@ export function Header() {
         {/* Warning Button */}
         <button
           onClick={() => setShowWarning(true)}
-          className="p-2 text-green-300 hover:text-green-200 transition-colors duration-200 group"
+          className="p-2 text-green-300 hover:text-green-200 cursor-pointer transition-colors duration-200 group"
           title="Development Notice"
         >
           <svg
@@ -109,7 +109,7 @@ export function Header() {
           {/* Close button */}
           <button
             onClick={() => setShowWarning(false)}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -127,7 +127,7 @@ export function Header() {
 
           {/* Title */}
           <h2 className="text-xl font-mono font-bold text-white text-center mb-4">
-            ⚠️ Development Notice ⚠️
+             Development Notice 
           </h2>
 
           {/* Content */}
@@ -146,7 +146,7 @@ export function Header() {
               </ul>
             </div>
 
-            <div className="bg-green-900/20 border border-green-600 rounded-lg p-4">
+            <div className="bg-green-300/10 border border-green-300 rounded-lg p-4">
               <p className="text-green-300 font-semibold mb-2">To test vault interactions:</p>
               <p className="text-xs text-green-200">
                 Get development USDC from Solana faucets or use devnet tokens to test deposit/withdraw functionality.
@@ -157,7 +157,7 @@ export function Header() {
           {/* Close Button */}
           <button
             onClick={() => setShowWarning(false)}
-            className="w-full mt-6 bg-green-300 text-black font-mono font-bold py-3 px-4 rounded-lg hover:bg-green-400 transition-colors duration-200"
+            className="w-full mt-6 bg-green-300 text-black font-mono font-bold py-3 px-4 rounded-lg hover:bg-green-400 transition-colors duration-200 cursor-pointer"
           >
             UNDERSTOOD
           </button>

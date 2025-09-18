@@ -12,7 +12,7 @@ import {
   AssetsDisplay,
   LiveRatesDisplay,
 } from "../components/dashboardcomponents";
-import { BasicLineChart } from "../components/landingpagecomponents/LineChart";
+import { BasicLineChart } from "../components/dashboardcomponents/LineChart";
 
 interface DashboardProps {
   onBackToLanding: () => void;
@@ -161,7 +161,7 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
           />
 
           {/* Tab Content */}
-          <main className="pb-8">
+          <main >
             {renderTabContent()}
           </main>
 

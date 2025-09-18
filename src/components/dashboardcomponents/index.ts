@@ -7,4 +7,5 @@ export { AssetsDisplay } from "./AssetsDisplay";
 export { LiveRatesDisplay } from "./LiveRatesDisplay";
 export { TransactionModal } from "./TransactionModal";
 export type { TabType } from "./TabNavigation";
+export { BasicLineChart } from "./LineChart";
 

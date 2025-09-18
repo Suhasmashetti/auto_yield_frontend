@@ -178,12 +178,6 @@ export function BasicLineChart({ userTotalValue = 0 }: BasicLineChartProps) {
                   </div>
                   <p className="text-gray-400 font-mono text-lg mb-2">Start earning yield</p>
                   <p className="text-gray-500 font-mono text-sm mb-4">Deposit USDC tokens to begin tracking your portfolio performance</p>
-                  <div className="inline-flex items-center px-4 py-2 bg-green-900/20 border border-green-600 rounded-lg">
-                    <svg className="w-4 h-4 text-green-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                    <span className="text-green-300 font-mono text-sm">Go to Portfolio tab to deposit</span>
-                  </div>
                 </div>
               </div>
             )}

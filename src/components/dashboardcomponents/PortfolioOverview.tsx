@@ -93,6 +93,7 @@ export function PortfolioOverview({
 
   const isAmountValid = !!amount && parseFloat(amount) > 0;
 
+
   return (
     <div className="bg-black border-b border-gray-800 px-4 py-6 pt-30">
       <div className="w-full">
