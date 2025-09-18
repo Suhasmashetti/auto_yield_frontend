@@ -1,5 +1,5 @@
 import { GridBackgroundDemo } from "../components/shadcomponents/GridBackground";
-import { Navigation, Hero, Stats, CallToAction, Features, Footer } from "../components/landingpagecomponents";
+import { Navigation, Hero, Stats, CallToAction, Features, Footer, HowItWorks, FAQ } from "../components/landingpagecomponents";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -19,6 +19,12 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
       {/* Stats Section */}
       <Stats />
+
+      {/* How It Works Section */}
+      <HowItWorks />
+
+      {/* FAQ Section */}
+      <FAQ />
 
       {/* Ready to Start Section */}
       <CallToAction />
