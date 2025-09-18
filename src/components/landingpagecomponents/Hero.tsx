@@ -35,14 +35,14 @@ export function Hero({ onGetStarted }: HeroProps) {
 
   return (
     <div className="relative z-10 min-h-screen flex items-center pt-20">
-      <div className="max-w-7xl mx-auto px-7 w-full">
+      <div className="max-w-6xl mx-auto px-4 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
           {/* Left Side - Main Content */}
           <div className="space-y-4">
             {/* Main Heading */}
             <div>
-              <h1 className="text-4xl md:text-7xl lg:text-8xl font-bold leading-tight tracking-tight">
+              <h1 className="text-3xl md:text-7xl lg:text-8xl font-serif leading-tight tracking-tight">
                 <span className="text-white/80">STOP</span>
                 <br />
                 <span className="text-white/80">HOLDING</span>
@@ -59,7 +59,7 @@ export function Hero({ onGetStarted }: HeroProps) {
 
             {/* Subtitle */}
             <div>
-              <p className="text-xl md:text-2xl text-gray-300 leading-relaxed font-light max-w-lg">
+              <p className="text-xl md:text-2xl text-gray-300 leading-relaxed font-mono max-w-lg">
                 Discover, stake, and earn yield on USDC through automated vault strategies.
               </p>
             </div>
@@ -79,7 +79,7 @@ export function Hero({ onGetStarted }: HeroProps) {
                   </span>
                 </button>
               ) : (
-                <div className="text-gray-400">
+                <div className="text-gray-400 font-mono">
                   <p className="mb-4 text-lg">Connect your wallet to get started</p>
                 </div>
               )}
@@ -89,7 +89,7 @@ export function Hero({ onGetStarted }: HeroProps) {
           {/* Right Side - Available Aggregators Cards & Smart Routing */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-white mb-6 text-center">Available Yield Aggregators</h3>
+              <h3 className="text-xl font-mono text-white mb-6 text-center">Available Yield Aggregators</h3>
               
               {/* Aggregator Cards */}
               <div className="space-y-4">
@@ -98,13 +98,13 @@ export function Hero({ onGetStarted }: HeroProps) {
                     key={aggregator.name}
                     name={aggregator.name}
                     description={aggregator.description}
-                    apy={aggregator.apy}
+                    
                     icon={aggregator.icon}
                   />
                 ))}
               </div>
 
-              <div className="text-center mt-6">
+              <div className="text-center mt-6 font-mono">
                 <p className="text-gray-400 text-sm">
                    Smart routing finds the best yields automatically
                 </p>
