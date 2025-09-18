@@ -12,6 +12,7 @@ import {
   AssetsDisplay,
   LiveRatesDisplay,
 } from "../components/dashboardcomponents";
+import { BasicLineChart } from "../components/landingpagecomponents/LineChart";
 
 interface DashboardProps {
   onBackToLanding: () => void;
@@ -47,12 +48,12 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
   );
 
   // Calculate portfolio values based on user's individual balance
-  const totalValue = userBalances.yusdcBalance || 0; // User's deposited amount in yUSDC
+  const totalValue = userBalances.yusdcBalance || 0; // User's deposited amount in BBC
   const interestEarned = 0; // Calculate based on your logic
   
   // Real data for assets and allocations based on user's balance
   const mockAssets = totalValue > 0 ? [{
-    symbol: "yUSDC",
+    symbol: "BBC",
     name: "Yield USDC",
     amount: totalValue,
     value: totalValue,
@@ -106,10 +107,7 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
         );
       case "insights":
         return (
-          <div className="px-4 py-12 text-center">
-            <h2 className="text-2xl font-semibold text-white mb-4">Insights</h2>
-            <p className="text-gray-400">Performance analytics and insights coming soon.</p>
-          </div>
+          <BasicLineChart userTotalValue={totalValue} />
         );
       case "activity":
         return (
