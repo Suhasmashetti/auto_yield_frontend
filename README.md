@@ -1,11 +1,13 @@
-# Auto Yield Frontend
+# BlueBerry Fi│   │   │   ├── Header.tsx               # Dashboard navigation header
+│   │   │   ├── UserBalancesCard.tsx     # User's USDC/BBC balances
+│   │   │   └── VaultInfoCard.tsx        # Vault statistics & informationce Frontend
 
-A modern React + TypeScript frontend for the Auto Yield vault smart contract on Solana Devnet. Features a clean, modular architecture with organized components and optimized blockchain interactions.
+A modern React + TypeScript frontend for the BlueBerry Finance vault smart contract on Solana Devnet. Features a clean, modular architecture with organized components and optimized blockchain interactions.
 
 ## 📁 Project Structure
 
 ```
-auto-yield-frontend/
+blueberry-finance-frontend/
 ├── src/
 │   ├── components/
 │   │   ├── dashboardcomponents/           # Dashboard-specific components
@@ -63,9 +65,9 @@ auto-yield-frontend/
 - **Wallet Connection**: Connect using Phantom, Solflare, or other Solana wallets
 - **Vault Management**: Initialize and manage yield vaults (one-time setup)
 - **Smart Staking**: Deposit USDC tokens to earn yield with account validation
-- **Flexible Withdrawals**: Withdraw yUSDC tokens back to USDC seamlessly
-- **Real-time Balances**: Live updates of USDC and yUSDC token balances
-- **Exchange Rate Tracking**: Monitor current yUSDC to USDC exchange rates
+- **Flexible Withdrawals**: Withdraw BBC tokens back to USDC seamlessly
+- **Real-time Balances**: Live updates of USDC and BBC token balances
+- **Exchange Rate Tracking**: Monitor current BBC to USDC exchange rates
 
 ### 🔧 Developer Experience
 - **TypeScript Integration**: Full type safety throughout the application
@@ -87,7 +89,7 @@ auto-yield-frontend/
 
 1. **Install dependencies**:
    ```bash
-   cd auto-yield-frontend
+   cd blueberry-finance-frontend
    npm install
    ```
 
@@ -127,8 +129,8 @@ auto-yield-frontend/
    - Watch your balances update
 
 6. **Test Withdrawals**:
-   - Enter the amount of yUSDC you want to withdraw
-   - Click "Withdraw yUSDC"
+   - Enter the amount of BBC you want to withdraw
+   - Click "Withdraw BBC"
    - Approve the transaction
    - Receive USDC back to your wallet
 
