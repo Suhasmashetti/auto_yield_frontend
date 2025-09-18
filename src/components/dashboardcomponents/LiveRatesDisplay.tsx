@@ -86,7 +86,7 @@ export function LiveRatesDisplay() {
           return;
         }
       }
-      const response = await fetch("http://localhost:5000/api/usdc-apy");
+      const response = await fetch("https://apy-proxy-server.onrender.com/api/usdc-apy");
       const data: APIResponse = await response.json();
       setPools(data.usdcPools);
       setBestPool(data.bestPool);

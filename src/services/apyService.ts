@@ -6,11 +6,24 @@ interface AggregatorAPI {
 }
 
 interface APYResponse {
-  protocol: string;
-  apy: number;
+  usdcPools: Array<{
+    symbol: string;
+    project: string;
+    apy: number;
+    pool: string;
+    chain: string;
+    tvlUsd: number;
+  }>;
+  bestPool: {
+    symbol: string;
+    project: string;
+    apy: number;
+    pool: string;
+    chain: string;
+    tvlUsd: number;
+  } | null;
   source: string;
   timestamp: string;
-  error?: string;
 }
 
 interface APYData {
@@ -26,32 +39,22 @@ interface APYData {
  * Service to fetch real-time APY data from Solana DeFi protocols via proxy server
  */
 export class APYFetchService {
-  private readonly PROXY_BASE_URL = 'http://localhost:3001';
+  private readonly PROXY_BASE_URL = process.env.NODE_ENV === 'production' 
+    ? 'https://apy-proxy-server.onrender.com'
+    : 'http://localhost:5000';
   
   private aggregatorAPIs: AggregatorAPI[] = [
     {
-      name: "Tulip Garden",
-      protocol: "tulip",
-      apiEndpoint: `${this.PROXY_BASE_URL}/api/tulip`,
-      fallbackAPY: 8.5
-    },
-    {
       name: "Francium",
       protocol: "francium", 
-      apiEndpoint: `${this.PROXY_BASE_URL}/api/francium`,
-      fallbackAPY: 5.0
+      apiEndpoint: `${this.PROXY_BASE_URL}/api/usdc-apy`,
+      fallbackAPY: 13.15
     },
     {
-      name: "Kamino Finance",
-      protocol: "kamino",
-      apiEndpoint: `${this.PROXY_BASE_URL}/api/kamino`,
-      fallbackAPY: 10.1
-    },
-    {
-      name: "Solend",
-      protocol: "solend",
-      apiEndpoint: `${this.PROXY_BASE_URL}/api/solend`,
-      fallbackAPY: 7.8
+      name: "Pluto",
+      protocol: "pluto",
+      apiEndpoint: `${this.PROXY_BASE_URL}/api/usdc-apy`,
+      fallbackAPY: 3.07
     },
   ];
 
@@ -70,17 +73,11 @@ export class APYFetchService {
       return cached.data;
     }
 
-    const apiConfig = this.aggregatorAPIs.find(api => api.protocol === protocol);
-    if (!apiConfig) {
-      console.warn(`No API configuration found for protocol: ${protocol}`);
-      return null;
-    }
-
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for proxy
 
-      const response = await fetch(apiConfig.apiEndpoint, {
+      const response = await fetch(`${this.PROXY_BASE_URL}/api/usdc-apy`, {
         signal: controller.signal,
         headers: {
           'Accept': 'application/json',
@@ -96,12 +93,21 @@ export class APYFetchService {
 
       const proxyResponse: APYResponse = await response.json();
 
+      // Find the specific protocol in the pools
+      const pool = proxyResponse.usdcPools.find(p => p.project.toLowerCase() === protocol.toLowerCase());
+      const apiConfig = this.aggregatorAPIs.find(api => api.protocol === protocol);
+      
+      if (!pool && !apiConfig) {
+        console.warn(`No pool found for protocol: ${protocol}`);
+        return null;
+      }
+
       const apyData: APYData = {
-        name: apiConfig.name,
-        protocol: proxyResponse.protocol,
-        apy: proxyResponse.apy || apiConfig.fallbackAPY,
+        name: apiConfig?.name || (pool?.project) || protocol,
+        protocol: protocol,
+        apy: pool?.apy || apiConfig?.fallbackAPY || 0,
         lastUpdated: new Date(proxyResponse.timestamp),
-        isLive: proxyResponse.source !== 'fallback' && !proxyResponse.error,
+        isLive: !!pool && proxyResponse.source !== 'fallback',
         source: proxyResponse.source
       };
 
@@ -111,7 +117,10 @@ export class APYFetchService {
       return apyData;
 
     } catch (error) {
-      console.error(`Failed to fetch APY for ${apiConfig.name} via proxy:`, error);
+      console.error(`Failed to fetch APY for ${protocol}:`, error);
+      
+      const apiConfig = this.aggregatorAPIs.find(api => api.protocol === protocol);
+      if (!apiConfig) return null;
       
       // Return fallback data
       const fallbackData: APYData = {
@@ -132,8 +141,8 @@ export class APYFetchService {
    */
   async fetchAllAPYs(): Promise<APYData[]> {
     try {
-      // Try to fetch all APYs at once from the proxy
-      const response = await fetch(`${this.PROXY_BASE_URL}/api/all-apys`, {
+      // Fetch APY data from the unified endpoint
+      const response = await fetch(`${this.PROXY_BASE_URL}/api/usdc-apy`, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
@@ -141,31 +150,29 @@ export class APYFetchService {
       });
 
       if (response.ok) {
-        const allApyResponse = await response.json();
+        const apyResponse: APYResponse = await response.json();
         
-        return allApyResponse.data.map((apyResponse: APYResponse) => {
-          const apiConfig = this.aggregatorAPIs.find(api => api.protocol === apyResponse.protocol);
-          
+        return apyResponse.usdcPools.map((pool) => {
           const apyData: APYData = {
-            name: apiConfig?.name || apyResponse.protocol,
-            protocol: apyResponse.protocol,
-            apy: apyResponse.apy || apiConfig?.fallbackAPY || 0,
+            name: pool.project.charAt(0).toUpperCase() + pool.project.slice(1),
+            protocol: pool.project.toLowerCase(),
+            apy: pool.apy,
             lastUpdated: new Date(apyResponse.timestamp),
-            isLive: apyResponse.source !== 'fallback' && !apyResponse.error,
+            isLive: apyResponse.source !== 'fallback',
             source: apyResponse.source
           };
 
           // Cache individual results
-          this.cache.set(apyResponse.protocol, { data: apyData, timestamp: Date.now() });
+          this.cache.set(pool.project.toLowerCase(), { data: apyData, timestamp: Date.now() });
           
           return apyData;
         });
       }
     } catch (error) {
-      console.error('Failed to fetch all APYs at once, falling back to individual requests:', error);
+      console.error('Failed to fetch APY data:', error);
     }
 
-    // Fallback to individual requests
+    // Fallback to individual requests if needed
     const promises = this.aggregatorAPIs.map(api => this.fetchAPY(api.protocol));
     const results = await Promise.allSettled(promises);
 
