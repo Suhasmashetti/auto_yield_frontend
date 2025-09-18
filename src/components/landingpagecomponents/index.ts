@@ -5,3 +5,6 @@ export { CallToAction } from './CallToAction';
 export { Features } from './Features';
 export { Footer } from './Footer';
 export { AggregatorCard } from './AggregatorCard';
+export { HowItWorks } from './HowItWorks';
+export { FAQ } from './FAQ';
+export { BasicLineChart } from './LineChart';
