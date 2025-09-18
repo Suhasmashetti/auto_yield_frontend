@@ -23,9 +23,9 @@ export function DevelopmentUtils({ onError, vaultInfo }: DevelopmentUtilsProps) 
     console.log("Vault Authority:", VAULT_AUTHORITY.toBase58());
     console.log("Vault Metadata:", vaultMetadata.toBase58());
     console.log("Vault USDC:", vaultUsdc.toBase58());
-    console.log("yUSDC Mint (derived):", yusdcMint.toBase58());
+    console.log("BBC Mint (derived):", yusdcMint.toBase58());
     if (vaultInfo) {
-      console.log("yUSDC Mint (actual):", vaultInfo.yusdcMint.toBase58());
+      console.log("BBC Mint (actual):", vaultInfo.yusdcMint.toBase58());
     }
     console.log("Program ID:", program.programId?.toBase58() || "Not available");
   };
@@ -86,8 +86,8 @@ export function DevelopmentUtils({ onError, vaultInfo }: DevelopmentUtilsProps) 
   const isVaultOwner = publicKey && publicKey.equals(VAULT_AUTHORITY);
 
   return (
-    <div className="bg-gray-900 rounded-lg border border-gray-700 p-6">
-      <h2 className="text-lg font-medium mb-6 text-white">Development Utils</h2>
+    <div className="bg-black rounded-lg  p-6 max-w-4xl mx-auto">
+      <h2 className="text-xl font-medium mb-6 text-white">Development Utils</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
         <button
@@ -136,7 +136,7 @@ export function DevelopmentUtils({ onError, vaultInfo }: DevelopmentUtilsProps) 
         
         {vaultInfo && (
           <div className="flex items-center justify-between py-2 border-b border-gray-700">
-            <span className="text-gray-400">yUSDC Mint</span>
+            <span className="text-gray-400">BBC Mint</span>
             <code className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded font-mono">
               {vaultInfo.yusdcMint.toBase58()}
             </code>

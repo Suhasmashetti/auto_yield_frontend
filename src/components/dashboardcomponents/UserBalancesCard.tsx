@@ -16,8 +16,8 @@ export const UserBalancesCard = memo(function UserBalancesCard({ userBalances }:
           value={`${userBalances.usdcBalance.toFixed(6)} USDC`}
         />
         <BalanceRow
-          label="yUSDC"
-          value={`${userBalances.yusdcBalance.toFixed(6)} yUSDC`}
+          label="BBC"
+          value={`${userBalances.yusdcBalance.toFixed(6)} BBC`}
         />
       </div>
     </div>

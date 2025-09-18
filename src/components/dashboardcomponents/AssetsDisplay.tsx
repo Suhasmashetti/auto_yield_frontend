@@ -1,5 +1,6 @@
 
 import usdcLogo from "../../assets/icons/usd-coin-usdc-logo.png";
+import blueberry from "../../assets/icons/blueberry.png";
 
 interface AssetData {
   symbol: string;
@@ -96,7 +97,7 @@ export function AssetsDisplay({
       {/* Your Assets */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-white">Your Assets</h2>
-        <div className="bg-gray-900 rounded-lg overflow-hidden">
+        <div className="bg-black rounded-lg overflow-hidden">
           {assets.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-gray-400">No deposited assets</p>
@@ -110,7 +111,7 @@ export function AssetsDisplay({
                       {/* USDC logo */}
                       <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-white">
                         <img 
-                          src={usdcLogo}
+                          src={blueberry}
                           alt="USDC"
                           className="w-8 h-8 object-contain"
                         />
@@ -129,7 +130,7 @@ export function AssetsDisplay({
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-green-400 font-medium">
+                      <div className="text-green-300 font-medium">
                         {asset.apy.toFixed(2)}% APY
                       </div>
                       {asset.protocol && (
@@ -147,7 +148,7 @@ export function AssetsDisplay({
       {/* Your Allocations */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-white">Your Allocations</h2>
-        <div className="bg-gray-900 rounded-lg overflow-hidden">
+        <div className="bg-black rounded-lg overflow-hidden">
           {allocations.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-gray-400">No deposited assets</p>
@@ -177,21 +178,21 @@ export function AssetsDisplay({
                       <div className="text-white font-medium">
                         ${formatCurrency(allocation.amount)}
                       </div>
-                      <div className="text-green-400 text-sm">
+                      <div className="text-green-300 text-sm">
                         {allocation.apy.toFixed(2)}% APY
                       </div>
                     </div>
                   </div>
                   
                   {/* Progress bar */}
-                  <div className="mt-3">
+                  {/* <div className="mt-3">
                     <div className="w-full bg-gray-700 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${allocation.percentage}%` }}
                       ></div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               ))}
             </div>

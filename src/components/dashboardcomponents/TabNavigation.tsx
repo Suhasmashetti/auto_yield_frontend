@@ -27,7 +27,7 @@ export function TabNavigation({ activeTab, onTabChange, className = "" }: TabNav
               onClick={() => onTabChange(tab.id)}
               className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === tab.id
-                  ? "border-green-500 text-white"
+                  ? "border-green-300 text-white"
                   : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
               }`}
             >
