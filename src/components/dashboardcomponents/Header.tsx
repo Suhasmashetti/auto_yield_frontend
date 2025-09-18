@@ -22,7 +22,7 @@ export function Header() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 w-full z-50 px-6 py-4 flex items-center justify-between border-b transition-all duration-300 ${
+        className={`fixed top-0 left-0 w-full z-50 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b transition-all duration-300 ${
           scrolled
             ? "backdrop-blur-md bg-black/50 border-gray-800"
             : "bg-black border-gray-800"
@@ -35,11 +35,11 @@ export function Header() {
         type="button"
       > */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-white">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center bg-white">
             <img src={blueberry} alt="blueberrylogo" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-white uppercase tracking-wider">
+            <h1 className="text-lg sm:text-xl font-bold text-white uppercase tracking-wider">
               BlueBerry Finance
             </h1>
             <span className="text-xs text-gray-400 uppercase tracking-wider">
@@ -82,15 +82,15 @@ export function Header() {
       </div>
 
       {/* Right section */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-4">
         {/* Warning Button */}
         <button
           onClick={() => setShowWarning(true)}
-          className="p-2 text-green-300 hover:text-green-200 cursor-pointer transition-colors duration-200 group"
+          className="p-1 sm:p-2 text-green-300 hover:text-green-200 cursor-pointer transition-colors duration-200 group"
           title="Development Notice"
         >
           <svg
-            className="w-6 h-6 group-hover:scale-110 transition-transform duration-200"
+            className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform duration-200"
             fill="currentColor"
             viewBox="0 0 24 24"
           >
@@ -98,7 +98,7 @@ export function Header() {
           </svg>
         </button>
         
-        <WalletMultiButton className="!bg-white !text-black hover:!bg-gray-200 !font-medium !px-4 !py-2 !transition !border-2 !border-white uppercase tracking-wider" />
+        <WalletMultiButton className="!bg-white !text-black hover:!bg-gray-200 !font-medium !px-2 !py-1 sm:!px-4 sm:!py-2 !transition !border-2 !border-white uppercase tracking-wider !text-xs sm:!text-sm !min-w-0 !whitespace-nowrap" />
       </div>
     </nav>
 
