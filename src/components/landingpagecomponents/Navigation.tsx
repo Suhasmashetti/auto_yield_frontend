@@ -36,12 +36,12 @@ export function Navigation() {
           >
             VAULT
           </Link>
-          {/* <Link
+          <Link
             to="/dashboard"
             className="text-white font-mono hover:text-white/80 transition-colors"
           >
             DASHBOARD
-          </Link> */}
+          </Link>
           <Link
             to="/docs"
             className="text-white font-mono hover:text-white/80 transition-colors"
