@@ -11,6 +11,7 @@ import {
   useTabNavigation,
   AssetsDisplay,
   LiveRatesDisplay,
+  TxSignatureToast,
 } from "../components/dashboardcomponents";
 import { BasicLineChart } from "../components/dashboardcomponents/LineChart";
 
@@ -32,6 +33,8 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
     handleWithdraw,
     refreshData,
     setError,
+    lastTransactionSignature,
+    clearTransactionSignature,
   } = useVaultOperations();
 
   // Memoized callbacks
@@ -142,6 +145,14 @@ export function Dashboard({ onBackToLanding }: DashboardProps) {
 
       {/* Error Toast/Alert */}
       <ErrorDisplay error={error} onClose={memoizedClearError} />
+
+      {/* Tx Signature Toast */}
+      {lastTransactionSignature && (
+        <TxSignatureToast
+          signature={lastTransactionSignature}
+          onClose={clearTransactionSignature}
+        />
+      )}
 
       {connected ? (
         <div className="max-w-4xl mx-auto">
