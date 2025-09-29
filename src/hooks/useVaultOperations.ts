@@ -202,14 +202,23 @@ export function useVaultOperations() {
 
   // Deposit
   const handleDeposit = useCallback(async (amount: string) => {
+    // Clear any existing errors first
+    setError("");
+    
     if (!program || !publicKey || !amount) return;
+    
+    // Check wallet connection first
+    if (!connected) {
+      setError("Please connect your wallet first.");
+      return;
+    }
+    
     const validation = validateAmount(amount);
     if (!validation.isValid) {
       setError(validation.error!);
       return;
     }
     setLoading(true);
-    setError("");
     try {
       const { vaultMetadata, vaultUsdc, yusdcMint } = deriveVaultPDAs(VAULT_AUTHORITY, program);
       const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
@@ -279,13 +288,40 @@ export function useVaultOperations() {
       }
       setError("");
       setLastTransactionSignature(signature);
+      
+      // Record successful transaction
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        await fetch(`${API_URL}/api/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userAddress: publicKey.toBase58(),
+            transactionHash: signature,
+            transactionType: 'deposit',
+            amount: parseFloat(amount)
+          })
+        });
+      } catch (dbError) {
+        // Don't fail the transaction if database recording fails
+        console.log('Transaction recorded on blockchain but failed to save to database');
+      }
+      
       await sleep(REFRESH_DELAY_MS);
       await initializeData();
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Deposit error:", err);
       }
-      setError(formatErrorMessage(err, "Deposit"));
+      
+      // Check if it's a wallet error (user rejection)
+      if (err?.message?.includes('User rejected') || 
+          err?.name === 'WalletConnectionError' ||
+          err?.message?.includes('rejected')) {
+        setError("Transaction was cancelled by user.");
+      } else {
+        setError(formatErrorMessage(err, "Deposit"));
+      }
     } finally {
       setLoading(false);
     }
@@ -293,19 +329,42 @@ export function useVaultOperations() {
 
   // Withdraw
   const handleWithdraw = useCallback(async (amount: string) => {
+    // Clear any existing errors first
+    setError("");
+    
     if (!program || !publicKey || !amount || !vaultInfo) return;
+    
+    // Check wallet connection first
+    if (!connected) {
+      setError("Please connect your wallet first.");
+      return;
+    }
+    
     const validation = validateAmount(amount);
     if (!validation.isValid) {
       setError(validation.error!);
       return;
     }
     setLoading(true);
-    setError("");
     try {
       const { vaultMetadata, vaultUsdc, yusdcMint } = deriveVaultPDAs(VAULT_AUTHORITY, program);
       const userUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, publicKey);
       const userYusdcAta = getAssociatedTokenAddressSync(yusdcMint, publicKey);
-      const withdrawAmount = new anchor.BN(usdcToLamports(parseFloat(amount)));
+      
+      // Calculate yUSDC amount to burn based on desired USDC amount
+      // yUSDC_to_burn = (desired_usdc * total_yusdc_supply) / total_usdc_balance
+      const desiredUsdcAmount = parseFloat(amount);
+      let yusdcToBurn: number;
+      
+      if (!vaultInfo || vaultInfo.yusdcSupply === 0 || vaultInfo.usdcBalance === 0) {
+        // If no vault info or no liquidity, use 1:1 ratio
+        yusdcToBurn = desiredUsdcAmount;
+      } else {
+        // Calculate exchange rate: yUSDC needed = (USDC_desired * yUSDC_supply) / USDC_balance
+        yusdcToBurn = (desiredUsdcAmount * vaultInfo.yusdcSupply) / vaultInfo.usdcBalance;
+      }
+      
+      const withdrawAmount = new anchor.BN(usdcToLamports(yusdcToBurn));
       const signature = await program.methods.withdraw(withdrawAmount)
         .accounts({
           user: publicKey,
@@ -327,13 +386,40 @@ export function useVaultOperations() {
       }
       setError("");
       setLastTransactionSignature(signature);
+      
+      // Record successful transaction  
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        await fetch(`${API_URL}/api/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userAddress: publicKey.toBase58(),
+            transactionHash: signature,
+            transactionType: 'withdraw',
+            amount: parseFloat(amount)
+          })
+        });
+      } catch (dbError) {
+        // Don't fail the transaction if database recording fails
+        console.log('Transaction recorded on blockchain but failed to save to database');
+      }
+      
       await sleep(REFRESH_DELAY_MS);
       await initializeData();
     } catch (err: any) {
       if (process.env.NODE_ENV === 'development') {
         console.error("Withdraw error:", err);
       }
-      setError(formatErrorMessage(err, "Withdraw"));
+      
+      // Check if it's a wallet error (user rejection)
+      if (err?.message?.includes('User rejected') || 
+          err?.name === 'WalletConnectionError' ||
+          err?.message?.includes('rejected')) {
+        setError("Transaction was cancelled by user.");
+      } else {
+        setError(formatErrorMessage(err, "Withdraw"));
+      }
     } finally {
       setLoading(false);
     }
